@@ -12,18 +12,22 @@
       background-size: cover;
       background-position: center;
       background-attachment: fixed;
-      padding: 20px;
+      padding: 10px;
       font-family: Tahoma, sans-serif;
       margin: 0;
       height: 100vh;
-      overflow: hidden; /* Запрещаем прокрутку страницы */
+      overflow: hidden;
     }
+
     .window {
       position: absolute;
       margin: 0;
-      width: 400px;
+      width: 90%;
+      max-width: 400px;
       z-index: 2;
+      font-size: 1rem; /* Базовый размер шрифта */
     }
+
     .taskbar {
       position: fixed;
       bottom: 0;
@@ -31,12 +35,13 @@
       width: 100%;
       background-color: #c0c0c0;
       border-top: 2px solid #000;
-      height: 40px;
+      height: 50px;
       display: flex;
       align-items: center;
       padding: 5px;
       gap: 5px;
     }
+
     .taskbar button {
       font-size: 12px;
       padding: 5px 10px;
@@ -45,29 +50,85 @@
       border: 1px solid #000;
       border-radius: 3px;
     }
-    .tooltip {
-      position: absolute;
-      bottom: 40px;
-      right: 10px;
-      background-color: #f0f0f0;
-      border: 1px solid #000;
-      padding: 3px 5px;
-      font-size: 10px;
-      display: none; /* Initially hidden */
+
+    iframe {
+      width: 100%;
+      height: 300px;
+      border: 0;
+    }
+
+    /* Адаптация для мобильных устройств */
+    @media (max-width: 768px) {
+      body {
+        padding: 5px;
+        font-size: 0.9rem; /* Уменьшение общего размера текста */
+      }
+
+      .window {
+        width: 95%;
+        max-width: 320px;
+        font-size: 0.9rem; /* Уменьшение текста в окнах */
+      }
+
+      .taskbar {
+        height: 45px;
+      }
+
+      iframe {
+        height: 250px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        font-size: 0.8rem; /* Еще меньшее уменьшение текста */
+      }
+
+      .window {
+        width: 100%;
+        max-width: none;
+        font-size: 0.8rem;
+      }
+
+      .taskbar {
+        height: 40px;
+      }
+
+      .taskbar button {
+        font-size: 10px;
+        padding: 3px 8px;
+      }
+
+      iframe {
+        height: 200px;
+      }
+    }
+
+    @media (max-width: 320px) {
+      body {
+        font-size: 0.7rem; /* Подгонка для самых маленьких экранов */
+      }
+
+      .window {
+        font-size: 0.7rem;
+      }
+
+      iframe {
+        height: 180px;
+      }
     }
   </style>
 </head>
 <body>
 
   <!-- First window -->
-  <div class="window" id="window1" style="top: 50px; left: 50px;">
+  <div class="window" id="window1" style="top: 10px; left: 5%;">
     <div class="title-bar">
       <div class="title-bar-text">Hello!</div>
       <div class="title-bar-controls">
         <button aria-label="Minimize" class="minimize-btn"></button>
         <button aria-label="Maximize"></button>
         <button aria-label="Close" class="close-btn"></button>
-        <div class="tooltip">You can't do it here... sorry</div>
       </div>
     </div>
     <div class="window-body">
@@ -76,14 +137,13 @@
   </div>
 
   <!-- Second window -->
-  <div class="window" id="window2" style="top: 200px; left: 100px;">
+  <div class="window" id="window2" style="top: 200px; left: 5%;">
     <div class="title-bar">
       <div class="title-bar-text">Contacts</div>
       <div class="title-bar-controls">
         <button aria-label="Minimize" class="minimize-btn"></button>
         <button aria-label="Maximize"></button>
         <button aria-label="Close" class="close-btn"></button>
-        <div class="tooltip">You can't do it here... sorry</div>
       </div>
     </div>
     <div class="window-body">
@@ -95,18 +155,17 @@
   </div>
 
   <!-- Discord Server Window -->
-  <div class="window" id="window3" style="top: 350px; left: 150px;">
+  <div class="window" id="window3" style="top: 350px; left: 5%;">
     <div class="title-bar">
       <div class="title-bar-text">Discord Server</div>
       <div class="title-bar-controls">
         <button aria-label="Minimize" class="minimize-btn"></button>
         <button aria-label="Maximize"></button>
         <button aria-label="Close" class="close-btn"></button>
-        <div class="tooltip">You can't do it here... sorry</div>
       </div>
     </div>
     <div class="window-body">
-      <iframe src="https://canary.discord.com/widget?id=1277255118575636591&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+      <iframe src="https://canary.discord.com/widget?id=1277255118575636591&theme=dark" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
     </div>
   </div>
 
@@ -115,11 +174,9 @@
   </div>
 
   <script>
-    // Звуки
     const removeSound = new Audio('remove.ogg');
     const ouchSound = new Audio('ouch.ogg');
-
-    let closedWindows = 0;  // Количество закрытых окон
+    let closedWindows = 0;
 
     function makeWindowDraggable(windowElement) {
       let isDragging = false;
@@ -127,25 +184,32 @@
 
       const titleBar = windowElement.querySelector('.title-bar');
 
-      titleBar.addEventListener('mousedown', (e) => {
+      function startDragging(e) {
         isDragging = true;
-        offsetX = e.clientX - windowElement.offsetLeft;
-        offsetY = e.clientY - windowElement.offsetTop;
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-      });
+        const event = e.touches ? e.touches[0] : e;
+        offsetX = event.clientX - windowElement.offsetLeft;
+        offsetY = event.clientY - windowElement.offsetTop;
+        document.addEventListener(e.touches ? 'touchmove' : 'mousemove', onMouseMove);
+        document.addEventListener(e.touches ? 'touchend' : 'mouseup', onMouseUp);
+      }
 
       function onMouseMove(e) {
         if (!isDragging) return;
-        windowElement.style.left = `${e.clientX - offsetX}px`;
-        windowElement.style.top = `${e.clientY - offsetY}px`;
+        const event = e.touches ? e.touches[0] : e;
+        windowElement.style.left = `${event.clientX - offsetX}px`;
+        windowElement.style.top = `${event.clientY - offsetY}px`;
       }
 
       function onMouseUp() {
         isDragging = false;
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
+        document.removeEventListener('touchmove', onMouseMove);
+        document.removeEventListener('touchend', onMouseUp);
       }
+
+      titleBar.addEventListener('mousedown', startDragging);
+      titleBar.addEventListener('touchstart', startDragging, { passive: false });
     }
 
     function setupWindowControls(windowElement, taskbar) {
@@ -159,18 +223,18 @@
       taskbar.appendChild(taskButton);
 
       minimizeButton.addEventListener('click', () => {
-        removeSound.play();  // Проигрывание звука при сворачивании окна
+        removeSound.play();
         windowElement.style.display = 'none';
         taskButton.style.display = 'inline-block';
       });
 
       closeButton.addEventListener('click', () => {
-        ouchSound.play();  // Проигрывание звука при закрытии окна
+        ouchSound.play();
         windowElement.style.display = 'none';
         taskButton.style.display = 'none';
 
-        closedWindows++;  // Увеличиваем счетчик закрытых окон
-        checkWindowsStatus();  // Проверяем, закрыты ли все окна
+        closedWindows++;
+        checkWindowsStatus();
       });
 
       taskButton.addEventListener('click', () => {
@@ -182,7 +246,7 @@
     function checkWindowsStatus() {
       const windows = document.querySelectorAll('.window');
       if (closedWindows === windows.length) {
-        location.reload();  // Перезагружаем страницу, если все окна закрыты
+        location.reload();
       }
     }
 
