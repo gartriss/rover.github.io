@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rover's Website!</title>
+  <link rel="stylesheet" href="https://unpkg.com/xp.css/dist/XP.css">
+  <style>
+    body {
+      background-color: #008080;
+      background-image: url('https://i.redd.it/ybrmb3tfmxr81.png');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      padding: 20px;
+      font-family: Tahoma, sans-serif;
+      margin: 0;
+      height: 100vh;
+      overflow: hidden; /* Запрещаем прокрутку страницы */
+    }
+    .window {
+      position: absolute;
+      margin: 0;
+      width: 400px;
+      z-index: 2;
+    }
+    .taskbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #c0c0c0;
+      border-top: 2px solid #000;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      gap: 5px;
+    }
+    .taskbar button {
+      font-size: 12px;
+      padding: 5px 10px;
+      cursor: pointer;
+      background-color: #e0e0e0;
+      border: 1px solid #000;
+      border-radius: 3px;
+    }
+    .tooltip {
+      position: absolute;
+      bottom: 40px;
+      right: 10px;
+      background-color: #f0f0f0;
+      border: 1px solid #000;
+      padding: 3px 5px;
+      font-size: 10px;
+      display: none; /* Initially hidden */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- First window -->
+  <div class="window" id="window1" style="top: 50px; left: 50px;">
+    <div class="title-bar">
+      <div class="title-bar-text">Hello!</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" class="minimize-btn"></button>
+        <button aria-label="Maximize"></button>
+        <button aria-label="Close" class="close-btn"></button>
+        <div class="tooltip">You can't do it here... sorry</div>
+      </div>
+    </div>
+    <div class="window-body">
+      <p>Welcome to Rover's Website. You can download my ROM's here or just message me.</p>
+    </div>
+  </div>
+
+  <!-- Second window -->
+  <div class="window" id="window2" style="top: 200px; left: 100px;">
+    <div class="title-bar">
+      <div class="title-bar-text">Contacts</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" class="minimize-btn"></button>
+        <button aria-label="Maximize"></button>
+        <button aria-label="Close" class="close-btn"></button>
+        <div class="tooltip">You can't do it here... sorry</div>
+      </div>
+    </div>
+    <div class="window-body">
+      <p>
+        Telegram: <a href="https://t.me/gartriss" target="_blank">https://t.me/gartriss</a><br>
+        SourceForge: <a href="https://sourceforge.net/projects/gartriss-archive/files" target="_blank">https://sourceforge.net/projects/gartriss-archive/files</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- Discord Server Window -->
+  <div class="window" id="window3" style="top: 350px; left: 150px;">
+    <div class="title-bar">
+      <div class="title-bar-text">Discord Server</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" class="minimize-btn"></button>
+        <button aria-label="Maximize"></button>
+        <button aria-label="Close" class="close-btn"></button>
+        <div class="tooltip">You can't do it here... sorry</div>
+      </div>
+    </div>
+    <div class="window-body">
+      <iframe src="https://canary.discord.com/widget?id=1277255118575636591&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+    </div>
+  </div>
+
+  <!-- Taskbar -->
+  <div class="taskbar" id="taskbar">
+  </div>
+
+  <script>
+    // Звуки
+    const removeSound = new Audio('remove.ogg');
+    const ouchSound = new Audio('ouch.ogg');
+
+    let closedWindows = 0;  // Количество закрытых окон
+
+    function makeWindowDraggable(windowElement) {
+      let isDragging = false;
+      let offsetX, offsetY;
+
+      const titleBar = windowElement.querySelector('.title-bar');
+
+      titleBar.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        offsetX = e.clientX - windowElement.offsetLeft;
+        offsetY = e.clientY - windowElement.offsetTop;
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+      });
+
+      function onMouseMove(e) {
+        if (!isDragging) return;
+        windowElement.style.left = `${e.clientX - offsetX}px`;
+        windowElement.style.top = `${e.clientY - offsetY}px`;
+      }
+
+      function onMouseUp() {
+        isDragging = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+    }
+
+    function setupWindowControls(windowElement, taskbar) {
+      const minimizeButton = windowElement.querySelector('.minimize-btn');
+      const closeButton = windowElement.querySelector('.close-btn');
+      const taskButton = document.createElement('button');
+      const title = windowElement.querySelector('.title-bar-text').innerText;
+
+      taskButton.textContent = title;
+      taskButton.style.display = 'none';
+      taskbar.appendChild(taskButton);
+
+      minimizeButton.addEventListener('click', () => {
+        removeSound.play();  // Проигрывание звука при сворачивании окна
+        windowElement.style.display = 'none';
+        taskButton.style.display = 'inline-block';
+      });
+
+      closeButton.addEventListener('click', () => {
+        ouchSound.play();  // Проигрывание звука при закрытии окна
+        windowElement.style.display = 'none';
+        taskButton.style.display = 'none';
+
+        closedWindows++;  // Увеличиваем счетчик закрытых окон
+        checkWindowsStatus();  // Проверяем, закрыты ли все окна
+      });
+
+      taskButton.addEventListener('click', () => {
+        windowElement.style.display = 'block';
+        taskButton.style.display = 'none';
+      });
+    }
+
+    function checkWindowsStatus() {
+      const windows = document.querySelectorAll('.window');
+      if (closedWindows === windows.length) {
+        location.reload();  // Перезагружаем страницу, если все окна закрыты
+      }
+    }
+
+    const taskbar = document.getElementById('taskbar');
+    const windows = [
+      document.getElementById('window1'),
+      document.getElementById('window2'),
+      document.getElementById('window3')
+    ];
+
+    windows.forEach(window => {
+      setupWindowControls(window, taskbar);
+      makeWindowDraggable(window);
+    });
+  </script>
+
+</body>
+</html>
